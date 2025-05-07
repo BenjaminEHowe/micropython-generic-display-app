@@ -60,6 +60,35 @@ class App:
 
 
     def draw_display(self, timer):
+        def uptime_string_calculate(boot_time, current_time):
+            def plural_simple_if_reqd(unit, string):
+                if unit == 1:
+                    return f"{unit} {string}"
+                else:
+                    return f"{unit} {string}s"
+
+            def uptime_string_generate(major, major_name, minor_per_major, minor, minor_name):
+                minor = minor - (major * minor_per_major)
+                major_unit_string = plural_simple_if_reqd(major, major_name)
+                if minor:
+                    return major_unit_string + ", " + plural_simple_if_reqd(minor, minor_name)
+                else:
+                    return major_unit_string
+
+            seconds = current_time - boot_time
+            minutes = seconds // 60
+            hours = minutes // 60
+            days = hours // 24
+            if days:
+                return uptime_string_generate(days, "day", 24, hours, "hour")
+            if hours:
+               return uptime_string_generate(hours, "hour", 60, minutes, "minute")
+            if minutes:
+                return uptime_string_generate(minutes, "minute", 60, seconds, "second")
+            if seconds:
+                return plural_simple_if_reqd(seconds, "second")
+            return "0 seconds"
+
         self.display_clear()
         
         hello_y_pos = self.y_border
@@ -96,38 +125,6 @@ class App:
             self.presto.update()
         else:
             self.display.update()
-
-
-def plural_simple_if_reqd(unit, string):
-    if unit == 1:
-        return f"{unit} {string}"
-    else:
-        return f"{unit} {string}s"
-
-
-def uptime_string_calculate(boot_time, current_time):
-    seconds = current_time - boot_time
-    minutes = seconds // 60
-    hours = minutes // 60
-    days = hours // 24
-    if days:
-        return uptime_string_generate(days, "day", 24, hours, "hour")
-    if hours:
-       return uptime_string_generate(hours, "hour", 60, minutes, "minute")
-    if minutes:
-        return uptime_string_generate(minutes, "minute", 60, seconds, "second")
-    if seconds:
-        return plural_simple_if_reqd(seconds, "second")
-    return "0 seconds"
-
-
-def uptime_string_generate(major_unit, major_unit_name, minor_unit_per_major, minor_unit, minor_unit_name):
-    minor_unit = minor_unit - (major_unit * minor_unit_per_major)
-    major_unit_string = plural_simple_if_reqd(major_unit, major_unit_name)
-    if minor_unit:
-        return major_unit_string + ", " + plural_simple_if_reqd(minor_unit, minor_unit_name)
-    else:
-        return major_unit_string
 
 
 EINK_BW_BLACK = 0
