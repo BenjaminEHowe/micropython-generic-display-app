@@ -1,4 +1,5 @@
 import machine
+import time
 import ubinascii
 
 import devices
@@ -10,6 +11,8 @@ class App:
             raise Exception(f"Device \"{device_type}\" not recognised!")
         self.device = devices.KNOWN_DEVICES[device_type]
         self.device["type"] = device_type
+
+        self.boot_time = time.time()
 
         if device_type == devices.INKY_FRAME_4:
             from picographics import PicoGraphics, DISPLAY_INKY_FRAME_4
@@ -34,30 +37,49 @@ class App:
                 self.pen_bg = EINK_COLOUR_WHITE
 
         self.display.set_font("bitmap8")
-        width, height = self.display.get_bounds()
-        x_spacing = width // 50
-        y_spacing = height // 50
-        x_border = x_spacing
-        y_border = y_spacing
+        self.width, self.height = self.display.get_bounds()
+        self.x_spacing = self.width // 50
+        self.y_spacing = self.height // 50
+        self.x_border = self.x_spacing
+        self.y_border = self.y_spacing
         if device_type == devices.INKY_PACK:
-            x_border = 0
-            y_border = 0
+            self.x_border = 0
+            self.y_border = 0
 
+        self.timers = {}
+        self.draw_display(None)
+        screen_refresh_seconds = 1
+        if self.device["display_tech"] == "eink":
+            if self.device["colour"]:
+                # colour devices take approximately 40 seconds to refresh
+                screen_refresh_seconds = 360
+            else:
+                # b&w devices are generally pretty quick to refresh
+                screen_refresh_seconds = 60
+        self.timers["draw_display"] = machine.Timer(period=screen_refresh_seconds*1000, callback=self.draw_display)
+
+
+    def draw_display(self, timer):
         self.display_clear()
         
-        hello_y_pos = y_border
-        self.display.text(f"Hello, {self.device['name']}!", x_border, hello_y_pos, scale=self.device["font_scale"]["regular"])
-        board_id_title_y_pos = hello_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + y_spacing
+        hello_y_pos = self.y_border
+        self.display.text(f"Hello, {self.device['name']}!", self.x_border, hello_y_pos, scale=self.device["font_scale"]["regular"])
 
-        self.display.text("Board ID:", x_border, board_id_title_y_pos, scale=self.device["font_scale"]["regular"])
+        board_id_title_y_pos = hello_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
+        self.display.text("Board ID:", self.x_border, board_id_title_y_pos, scale=self.device["font_scale"]["regular"])
         board_id = ubinascii.hexlify(machine.unique_id()).decode()
-        board_id_y_pos = board_id_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + y_spacing
-        self.display.text(board_id, x_spacing * 3, board_id_y_pos, scale=self.device["font_scale"]["large"])
+        board_id_y_pos = board_id_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
+        self.display.text(board_id, self.x_spacing * 3, board_id_y_pos, scale=self.device["font_scale"]["large"])
+
+        system_uptime_title_y_pos = board_id_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["large"]) + self.y_spacing
+        self.display.text("System uptime:", self.x_spacing, system_uptime_title_y_pos, scale=self.device["font_scale"]["regular"])
+        system_uptime_y_pos = system_uptime_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
+        self.display.text(f"{time.time() - self.boot_time} seconds", self.x_spacing * 3, system_uptime_y_pos, scale=self.device["font_scale"]["regular"])
 
         created_scale = self.device["font_scale"]["small"]
         created_text = "Created by Benjamin Howe"
-        created_x_pos = width - self.display.measure_text(created_text, created_scale) - x_border
-        created_y_pos = height - (FONT_HEIGHT_BITMAP8 * created_scale) - y_border
+        created_x_pos = self.width - self.display.measure_text(created_text, created_scale) - self.x_border
+        created_y_pos = self.height - (FONT_HEIGHT_BITMAP8 * created_scale) - self.y_border
         self.display.text(created_text, created_x_pos, created_y_pos, scale=created_scale)
 
         self.display_update()
