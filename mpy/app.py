@@ -7,56 +7,66 @@ import devices
 
 class App:
     def __init__(self, device_type):
-        if device_type not in devices.KNOWN_DEVICES:
-            raise Exception(f"Device \"{device_type}\" not recognised!")
-        self.device = devices.KNOWN_DEVICES[device_type]
-        self.device["type"] = device_type
+        def set_device():
+            if device_type not in devices.KNOWN_DEVICES:
+                raise Exception(f"Device \"{device_type}\" not recognised!")
+            self.device = devices.KNOWN_DEVICES[device_type]
+            self.device["type"] = device_type
 
-        self.boot_time = time.time()
+        def set_dimensions():
+            self.width, self.height = self.display.get_bounds()
+            self.x_spacing = self.width // 50
+            self.y_spacing = self.height // 50
+            self.x_border = self.x_spacing
+            self.y_border = self.y_spacing
+            if device_type == devices.INKY_PACK:
+                self.x_border = 0
+                self.y_border = 0
 
-        if device_type == devices.INKY_FRAME_4:
-            from picographics import PicoGraphics, DISPLAY_INKY_FRAME_4
-            self.display = PicoGraphics(DISPLAY_INKY_FRAME_4)
-        elif device_type == devices.INKY_PACK:
-            from picographics import PicoGraphics, DISPLAY_INKY_PACK
-            self.display = PicoGraphics(DISPLAY_INKY_PACK)
-        elif device_type == devices.PRESTO:
-           from presto import Presto
-           self.presto = Presto(full_res=True)
-           self.display = self.presto.display
+        def set_display():
+            if self.device["type"] == devices.INKY_FRAME_4:
+                from picographics import PicoGraphics, DISPLAY_INKY_FRAME_4
+                self.display = PicoGraphics(DISPLAY_INKY_FRAME_4)
+            elif self.device["type"] == devices.INKY_PACK:
+                from picographics import PicoGraphics, DISPLAY_INKY_PACK
+                self.display = PicoGraphics(DISPLAY_INKY_PACK)
+            elif self.device["type"] == devices.PRESTO:
+               from presto import Presto
+               self.presto = Presto(full_res=True)
+               self.display = self.presto.display
 
-        if not self.device["colour"]:
-            self.pen_fg = EINK_BW_BLACK
-            self.pen_bg = EINK_BW_WHITE
-        else:
-            if self.device["display_tech"] == "lcd":
-                self.pen_fg = self.display.create_pen(*RGB_ORANGE)
-                self.pen_bg = self.display.create_pen(*RGB_BLACK)
-            elif self.device["display_tech"] == "eink":
-                self.pen_fg = EINK_COLOUR_BLACK
-                self.pen_bg = EINK_COLOUR_WHITE
-
-        self.display.set_font("bitmap8")
-        self.width, self.height = self.display.get_bounds()
-        self.x_spacing = self.width // 50
-        self.y_spacing = self.height // 50
-        self.x_border = self.x_spacing
-        self.y_border = self.y_spacing
-        if device_type == devices.INKY_PACK:
-            self.x_border = 0
-            self.y_border = 0
-
-        self.timers = {}
-        self.draw_display(None)
-        screen_refresh_seconds = 1
-        if self.device["display_tech"] == "eink":
-            if self.device["colour"]:
-                # colour devices take approximately 40 seconds to refresh
-                screen_refresh_seconds = 360
+        def set_pens():
+            if not self.device["colour"]:
+                self.pen_fg = EINK_BW_BLACK
+                self.pen_bg = EINK_BW_WHITE
             else:
-                # b&w devices are generally pretty quick to refresh
-                screen_refresh_seconds = 60
-        self.timers["draw_display"] = machine.Timer(period=screen_refresh_seconds*1000, callback=self.draw_display)
+                if self.device["display_tech"] == "lcd":
+                    self.pen_fg = self.display.create_pen(*RGB_ORANGE)
+                    self.pen_bg = self.display.create_pen(*RGB_BLACK)
+                elif self.device["display_tech"] == "eink":
+                    self.pen_fg = EINK_COLOUR_BLACK
+                    self.pen_bg = EINK_COLOUR_WHITE
+
+        def set_timers():
+            self.timers = {}
+            display_refresh_seconds = 1
+            if self.device["display_tech"] == "eink":
+                if self.device["colour"]:
+                    # colour devices take approximately 40 seconds to refresh
+                    display_refresh_seconds = 360
+                else:
+                    # b&w devices are generally pretty quick to refresh
+                    display_refresh_seconds = 60
+            self.timers["draw_display"] = machine.Timer(period=display_refresh_seconds*1000, callback=self.draw_display)
+
+        set_device()
+        self.boot_time = time.time()
+        set_display()
+        self.display.set_font("bitmap8")
+        set_pens()
+        set_dimensions()
+        self.draw_display(None)
+        set_timers()
 
 
     def draw_display(self, timer):
