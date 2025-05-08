@@ -15,6 +15,12 @@ class App:
                 self.display.set_pen(self.pen_fg)
 
             def display_update():
+                if self.eink_variable_update_speed:
+                    if self.eink_update_count % EINK_UPDATE_REFRESH_INTERVAL == 0:
+                        self.display.set_update_speed(EINK_UPDATE_SPEED_SLOW)
+                    else:
+                        self.display.set_update_speed(EINK_UPDATE_SPEED_FAST)
+                    self.eink_update_count += 1
                 if self.device["type"] == devices.PRESTO:
                     self.presto.update()
                 else:
@@ -107,6 +113,14 @@ class App:
                self.presto = Presto(full_res=True)
                self.display = self.presto.display
 
+        def set_eink_refresh_interval():
+            try:
+                self.display.set_update_speed(0)
+                self.eink_variable_update_speed = True
+                self.eink_update_count = 0
+            except ValueError:
+                self.eink_variable_update_speed = False
+
         def set_pens():
             if not self.device["colour"]:
                 self.pen_fg = EINK_BW_BLACK
@@ -135,6 +149,7 @@ class App:
         self.boot_time = time.time()
         set_display()
         self.display.set_font("bitmap8")
+        set_eink_refresh_interval()
         set_pens()
         set_dimensions()
         draw_display(None)
@@ -145,6 +160,9 @@ EINK_BW_BLACK = 0
 EINK_BW_WHITE = 15
 EINK_COLOUR_BLACK = 0
 EINK_COLOUR_WHITE = 1
+EINK_UPDATE_REFRESH_INTERVAL = 60
+EINK_UPDATE_SPEED_FAST = 2
+EINK_UPDATE_SPEED_SLOW = 0
 FONT_HEIGHT_BITMAP8 = 8
 RGB_BLACK = (0, 0, 0)
 RGB_ORANGE = (255, 204, 102)
