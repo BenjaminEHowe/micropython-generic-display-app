@@ -1,4 +1,5 @@
 import machine
+import os
 import time
 import ubinascii
 
@@ -69,6 +70,12 @@ class App:
             created_x_pos = self.width - self.display.measure_text(created_text, created_scale) - self.x_border
             created_y_pos = self.height - (FONT_HEIGHT_BITMAP8 * created_scale) - self.y_border
             self.display.text(created_text, created_x_pos, created_y_pos, scale=created_scale)
+
+            mp_version_scale = self.device["font_scale"]["small"]
+            mp_version_text = f"MicroPython version: v{os.uname().release}"
+            mp_version_xpos = self.width - self.display.measure_text(mp_version_text, mp_version_scale) - self.x_border
+            mp_version_ypos = created_y_pos - self.y_spacing - (FONT_HEIGHT_BITMAP8 * created_scale)
+            self.display.text(mp_version_text, mp_version_xpos, mp_version_ypos, scale=mp_version_scale)
 
             display_update()
         
