@@ -26,35 +26,6 @@ class App:
                 else:
                     self.display.update()
 
-            def uptime_string_calculate(boot_time, current_time):
-                def plural_simple_maybe(unit, string):
-                    if unit == 1:
-                        return f"{unit} {string}"
-                    else:
-                        return f"{unit} {string}s"
-
-                def string_generate(major, major_name, minor_per_major, minor, minor_name):
-                    minor = minor - (major * minor_per_major)
-                    major_unit_string = plural_simple_maybe(major, major_name)
-                    if minor:
-                        return major_unit_string + ", " + plural_simple_maybe(minor, minor_name)
-                    else:
-                        return major_unit_string
-
-                seconds = current_time - boot_time
-                minutes = seconds // 60
-                hours = minutes // 60
-                days = hours // 24
-                if days:
-                    return string_generate(days, "day", 24, hours, "hour")
-                if hours:
-                   return string_generate(hours, "hour", 60, minutes, "minute")
-                if minutes:
-                    return string_generate(minutes, "minute", 60, seconds, "second")
-                if seconds:
-                    return plural_simple_maybe(seconds, "second")
-                return "0 seconds"
-
             display_clear()
             
             hello_y_pos = self.y_border
@@ -69,7 +40,7 @@ class App:
             system_uptime_title_y_pos = board_id_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["large"]) + self.y_spacing
             self.display.text("System uptime:", self.x_spacing, system_uptime_title_y_pos, scale=self.device["font_scale"]["regular"])
             system_uptime_y_pos = system_uptime_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
-            self.display.text(uptime_string_calculate(self.boot_time, time.time()), self.x_spacing * 3, system_uptime_y_pos, scale=self.device["font_scale"]["regular"])
+            self.display.text(uptime_string_calculate(self.boot_time), self.x_spacing * 3, system_uptime_y_pos, scale=self.device["font_scale"]["regular"])
 
             created_scale = self.device["font_scale"]["small"]
             created_text = "Created by Benjamin Howe"
@@ -165,6 +136,38 @@ class App:
         self.display_last_draw_tms = None
         while True:
             draw_display_maybe()
+
+
+def uptime_string_calculate(boot_time, current_time=None):
+    def plural_simple_maybe(unit, string):
+        if unit == 1:
+            return f"{unit} {string}"
+        else:
+            return f"{unit} {string}s"
+
+    def string_generate(major, major_name, minor_per_major, minor, minor_name):
+        minor = minor - (major * minor_per_major)
+        major_unit_string = plural_simple_maybe(major, major_name)
+        if minor:
+            return major_unit_string + ", " + plural_simple_maybe(minor, minor_name)
+        else:
+            return major_unit_string
+
+    if current_time == None:
+        current_time = time.time()
+    seconds = current_time - boot_time
+    minutes = seconds // 60
+    hours = minutes // 60
+    days = hours // 24
+    if days:
+        return string_generate(days, "day", 24, hours, "hour")
+    if hours:
+       return string_generate(hours, "hour", 60, minutes, "minute")
+    if minutes:
+        return string_generate(minutes, "minute", 60, seconds, "second")
+    if seconds:
+        return plural_simple_maybe(seconds, "second")
+    return "0 seconds"
 
 
 EINK_BW_BLACK = 0
