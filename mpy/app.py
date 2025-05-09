@@ -27,17 +27,17 @@ class App:
                     self.display.update()
 
             def uptime_string_calculate(boot_time, current_time):
-                def plural_simple_if_reqd(unit, string):
+                def plural_simple_maybe(unit, string):
                     if unit == 1:
                         return f"{unit} {string}"
                     else:
                         return f"{unit} {string}s"
 
-                def uptime_string_generate(major, major_name, minor_per_major, minor, minor_name):
+                def string_generate(major, major_name, minor_per_major, minor, minor_name):
                     minor = minor - (major * minor_per_major)
-                    major_unit_string = plural_simple_if_reqd(major, major_name)
+                    major_unit_string = plural_simple_maybe(major, major_name)
                     if minor:
-                        return major_unit_string + ", " + plural_simple_if_reqd(minor, minor_name)
+                        return major_unit_string + ", " + plural_simple_maybe(minor, minor_name)
                     else:
                         return major_unit_string
 
@@ -46,13 +46,13 @@ class App:
                 hours = minutes // 60
                 days = hours // 24
                 if days:
-                    return uptime_string_generate(days, "day", 24, hours, "hour")
+                    return string_generate(days, "day", 24, hours, "hour")
                 if hours:
-                   return uptime_string_generate(hours, "hour", 60, minutes, "minute")
+                   return string_generate(hours, "hour", 60, minutes, "minute")
                 if minutes:
-                    return uptime_string_generate(minutes, "minute", 60, seconds, "second")
+                    return string_generate(minutes, "minute", 60, seconds, "second")
                 if seconds:
-                    return plural_simple_if_reqd(seconds, "second")
+                    return plural_simple_maybe(seconds, "second")
                 return "0 seconds"
 
             display_clear()
