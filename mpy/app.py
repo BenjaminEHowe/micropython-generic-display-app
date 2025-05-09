@@ -8,7 +8,7 @@ import devices
 
 class App:
     def __init__(self, device_type):
-        def draw_display(timer):
+        def draw_display():
             def display_clear():
                 self.display.set_pen(self.pen_bg)
                 self.display.clear()
@@ -85,11 +85,33 @@ class App:
 
             display_update()
         
+        def draw_display_maybe():
+            should_draw_display = False
+            now_ticks_ms = time.ticks_ms()
+            if self.display_last_draw_tms == None:
+                should_draw_display = True
+            else:
+                time_elapsed = time.ticks_diff(now_ticks_ms, self.display_last_draw_tms)
+                if time_elapsed > self.display_refresh_ms:
+                    should_draw_display = True
+            if should_draw_display:
+                draw_display()
+                self.display_last_draw_tms = now_ticks_ms
+
         def set_device():
             if device_type not in devices.KNOWN_DEVICES:
                 raise Exception(f"Device \"{device_type}\" not recognised!")
             self.device = devices.KNOWN_DEVICES[device_type]
             self.device["type"] = device_type
+
+            self.display_refresh_ms = 1000 // 30 # 30 FPS (target!)
+            if self.device["display_tech"] == "eink":
+                if self.device["colour"]:
+                    # colour devices take approximately 40 seconds to refresh
+                    self.display_refresh_ms = 300 * 1000
+                else:
+                    # b&w devices are generally pretty quick to refresh
+                    self.display_refresh_ms = 60 * 1000
 
         def set_dimensions():
             self.width, self.height = self.display.get_bounds()
@@ -133,18 +155,6 @@ class App:
                     self.pen_fg = EINK_COLOUR_BLACK
                     self.pen_bg = EINK_COLOUR_WHITE
 
-        def set_timers():
-            self.timers = {}
-            display_refresh_seconds = 1
-            if self.device["display_tech"] == "eink":
-                if self.device["colour"]:
-                    # colour devices take approximately 40 seconds to refresh
-                    display_refresh_seconds = 300
-                else:
-                    # b&w devices are generally pretty quick to refresh
-                    display_refresh_seconds = 60
-            self.timers["draw_display"] = machine.Timer(period=display_refresh_seconds*1000, callback=draw_display)
-
         set_device()
         self.boot_time = time.time()
         set_display()
@@ -152,8 +162,9 @@ class App:
         set_eink_refresh_interval()
         set_pens()
         set_dimensions()
-        draw_display(None)
-        set_timers()
+        self.display_last_draw_tms = None
+        while True:
+            draw_display_maybe()
 
 
 EINK_BW_BLACK = 0
