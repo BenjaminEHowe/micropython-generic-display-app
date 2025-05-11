@@ -14,3 +14,9 @@ For full details on supported devices see [`mpy/devices.py`](/mpy/devices.py).
 - [Pimoroni Inky Frame 4](https://shop.pimoroni.com/products/inky-frame-4): `devices.INKY_FRAME_4`
 - [Pimoroni Inky Pack](https://shop.pimoroni.com/products/pico-inky-pack): `devices.INKY_PACK`
 - [Pimoroni Presto](https://shop.pimoroni.com/products/presto): `devices.PRESTO`
+
+## Application Structure
+- `main.py`: runs when the device is booted.
+- `devices.py`: contains details about supported devices.
+- `app.py`: contains the logic required to display application data on the device, including state required for outputting to a display.
+- `hello.py`: our example "Hello" application, which contains its own state.

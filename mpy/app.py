@@ -5,6 +5,8 @@ import ubinascii
 
 import devices
 
+from hello import Hello
+
 
 class App:
     def __init__(self, device_type):
@@ -29,18 +31,17 @@ class App:
             display_clear()
             
             hello_y_pos = self.y_border
-            self.display.text(f"Hello, {self.device['name']}!", self.x_border, hello_y_pos, scale=self.device["font_scale"]["regular"])
+            self.display.text(f"Hello, {self.hello.name}!", self.x_border, hello_y_pos, scale=self.device["font_scale"]["regular"])
 
             board_id_title_y_pos = hello_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
             self.display.text("Board ID:", self.x_border, board_id_title_y_pos, scale=self.device["font_scale"]["regular"])
-            board_id = ubinascii.hexlify(machine.unique_id()).decode()
             board_id_y_pos = board_id_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
-            self.display.text(board_id, self.x_spacing * 3, board_id_y_pos, scale=self.device["font_scale"]["large"])
+            self.display.text(self.hello.board_id, self.x_spacing * 3, board_id_y_pos, scale=self.device["font_scale"]["large"])
 
             system_uptime_title_y_pos = board_id_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["large"]) + self.y_spacing
             self.display.text("System uptime:", self.x_spacing, system_uptime_title_y_pos, scale=self.device["font_scale"]["regular"])
             system_uptime_y_pos = system_uptime_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
-            self.display.text(uptime_string_calculate(self.boot_time), self.x_spacing * 3, system_uptime_y_pos, scale=self.device["font_scale"]["regular"])
+            self.display.text(self.hello.uptime_string_calculate(), self.x_spacing * 3, system_uptime_y_pos, scale=self.device["font_scale"]["regular"])
 
             created_scale = self.device["font_scale"]["small"]
             created_text = "Created by Benjamin Howe"
@@ -49,7 +50,7 @@ class App:
             self.display.text(created_text, created_x_pos, created_y_pos, scale=created_scale)
 
             mp_version_scale = self.device["font_scale"]["small"]
-            mp_version_text = f"MicroPython version: v{os.uname().release}"
+            mp_version_text = f"MicroPython version: v{self.hello.micropython_version}"
             mp_version_xpos = self.width - self.display.measure_text(mp_version_text, mp_version_scale) - self.x_border
             mp_version_ypos = created_y_pos - self.y_spacing - (FONT_HEIGHT_BITMAP8 * created_scale)
             self.display.text(mp_version_text, mp_version_xpos, mp_version_ypos, scale=mp_version_scale)
@@ -127,7 +128,7 @@ class App:
                     self.pen_bg = EINK_COLOUR_WHITE
 
         set_device()
-        self.boot_time = time.time()
+        self.hello = Hello(ubinascii.hexlify(machine.unique_id()).decode(), time.time(), os.uname().release, self.device["name"])
         set_display()
         self.display.set_font("bitmap8")
         set_eink_refresh_interval()
@@ -136,38 +137,6 @@ class App:
         self.display_last_draw_tms = None
         while True:
             draw_display_maybe()
-
-
-def uptime_string_calculate(boot_time, current_time=None):
-    def plural_simple_maybe(unit, string):
-        if unit == 1:
-            return f"{unit} {string}"
-        else:
-            return f"{unit} {string}s"
-
-    def string_generate(major, major_name, minor_per_major, minor, minor_name):
-        minor = minor - (major * minor_per_major)
-        major_unit_string = plural_simple_maybe(major, major_name)
-        if minor:
-            return major_unit_string + ", " + plural_simple_maybe(minor, minor_name)
-        else:
-            return major_unit_string
-
-    if current_time == None:
-        current_time = time.time()
-    seconds = current_time - boot_time
-    minutes = seconds // 60
-    hours = minutes // 60
-    days = hours // 24
-    if days:
-        return string_generate(days, "day", 24, hours, "hour")
-    if hours:
-       return string_generate(hours, "hour", 60, minutes, "minute")
-    if minutes:
-        return string_generate(minutes, "minute", 60, seconds, "second")
-    if seconds:
-        return plural_simple_maybe(seconds, "second")
-    return "0 seconds"
 
 
 EINK_BW_BLACK = 0
