@@ -2,27 +2,47 @@ import time
 
 
 class Hello:
-    def __init__(self, board_id, boot_time, micropython_version, name):
+    def __init__(
+        self,
+        board_id,
+        boot_time,
+        micropython_version,
+        name,
+    ):
         self.board_id = board_id
         self.boot_time = boot_time
         self.micropython_version = micropython_version
         self.name = name
 
 
-    def uptime_string_calculate(self, current_time=None):
-        def plural_simple_maybe(unit, string):
+    def uptime_string_calculate(
+        self,
+        current_time=None,
+    ):
+        def plural_simple_maybe(
+            unit,
+            string,
+        ):
             if unit == 1:
                 return f"{unit} {string}"
             else:
                 return f"{unit} {string}s"
 
-        def string_generate(major, major_name, minor_per_major, minor, minor_name):
+
+        def string_generate(
+            major,
+            major_name,
+            minor_per_major,
+            minor,
+            minor_name,
+        ):
             minor = minor - (major * minor_per_major)
             major_unit_string = plural_simple_maybe(major, major_name)
             if minor:
                 return major_unit_string + ", " + plural_simple_maybe(minor, minor_name)
             else:
                 return major_unit_string
+
 
         if current_time == None:
             current_time = time.time()

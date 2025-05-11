@@ -9,12 +9,16 @@ from hello import Hello
 
 
 class App:
-    def __init__(self, device_type):
+    def __init__(
+        self,
+        device_type,
+    ):
         def draw_display():
             def display_clear():
                 self.display.set_pen(self.pen_bg)
                 self.display.clear()
                 self.display.set_pen(self.pen_fg)
+
 
             def display_update():
                 if self.eink_variable_update_speed:
@@ -27,6 +31,7 @@ class App:
                     self.presto.update()
                 else:
                     self.display.update()
+
 
             display_clear()
             
@@ -56,7 +61,8 @@ class App:
             self.display.text(mp_version_text, mp_version_xpos, mp_version_ypos, scale=mp_version_scale)
 
             display_update()
-        
+
+
         def draw_display_maybe():
             should_draw_display = False
             now_ticks_ms = time.ticks_ms()
@@ -69,6 +75,7 @@ class App:
             if should_draw_display:
                 draw_display()
                 self.display_last_draw_tms = now_ticks_ms
+
 
         def set_device():
             if device_type not in devices.KNOWN_DEVICES:
@@ -85,6 +92,7 @@ class App:
                     # b&w devices are generally pretty quick to refresh
                     self.display_refresh_ms = 60 * 1000
 
+
         def set_dimensions():
             self.width, self.height = self.display.get_bounds()
             self.x_spacing = self.width // 50
@@ -94,6 +102,7 @@ class App:
             if device_type == devices.INKY_PACK:
                 self.x_border = 0
                 self.y_border = 0
+
 
         def set_display():
             if self.device["type"] == devices.INKY_FRAME_4:
@@ -107,6 +116,7 @@ class App:
                self.presto = Presto(full_res=True)
                self.display = self.presto.display
 
+
         def set_eink_refresh_interval():
             try:
                 self.display.set_update_speed(0)
@@ -114,6 +124,7 @@ class App:
                 self.eink_update_count = 0
             except ValueError:
                 self.eink_variable_update_speed = False
+
 
         def set_pens():
             if not self.device["colour"]:
@@ -127,8 +138,14 @@ class App:
                     self.pen_fg = EINK_COLOUR_BLACK
                     self.pen_bg = EINK_COLOUR_WHITE
 
+
         set_device()
-        self.hello = Hello(ubinascii.hexlify(machine.unique_id()).decode(), time.time(), os.uname().release, self.device["name"])
+        self.hello = Hello(
+            board_id=ubinascii.hexlify(machine.unique_id()).decode(),
+            boot_time=time.time(),
+            micropython_version=os.uname().release,
+            name=self.device["name"],
+        )
         set_display()
         self.display.set_font("bitmap8")
         set_eink_refresh_interval()
