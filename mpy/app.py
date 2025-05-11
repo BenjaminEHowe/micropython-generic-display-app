@@ -20,10 +20,10 @@ class App:
 
             def display_update():
                 if self.eink_variable_update_speed:
-                    if self.eink_update_count % EINK_UPDATE_REFRESH_INTERVAL == 0:
+                    if self.eink_update_count % self.config.get("EINK_REFRESH_INTERVAL") == 0:
                         self.display.set_update_speed(EINK_UPDATE_SPEED_SLOW)
                     else:
-                        self.display.set_update_speed(EINK_UPDATE_SPEED_FAST)
+                        self.display.set_update_speed(self.config.get("EINK_UPDATE_SPEED"))
                     self.eink_update_count += 1
                 if self.device["type"] == devices.PRESTO:
                     self.presto.update()
@@ -160,8 +160,6 @@ EINK_BW_BLACK = 0
 EINK_BW_WHITE = 15
 EINK_COLOUR_BLACK = 0
 EINK_COLOUR_WHITE = 1
-EINK_UPDATE_REFRESH_INTERVAL = 60
-EINK_UPDATE_SPEED_FAST = 2
 EINK_UPDATE_SPEED_SLOW = 0
 FONT_HEIGHT_BITMAP8 = 8
 RGB_BLACK = (0, 0, 0)
