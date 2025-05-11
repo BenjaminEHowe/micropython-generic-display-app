@@ -5,14 +5,12 @@ import ubinascii
 
 import devices
 
+from config import Config
 from hello import Hello
 
 
 class App:
-    def __init__(
-        self,
-        device_type,
-    ):
+    def __init__(self):
         def draw_display():
             def display_clear():
                 self.display.set_pen(self.pen_bg)
@@ -78,6 +76,7 @@ class App:
 
 
         def set_device():
+            device_type = self.config.get("DEVICE_TYPE")
             if device_type not in devices.KNOWN_DEVICES:
                 raise Exception(f"Device \"{device_type}\" not recognised!")
             self.device = devices.KNOWN_DEVICES[device_type]
@@ -99,7 +98,7 @@ class App:
             self.y_spacing = self.height // 50
             self.x_border = self.x_spacing
             self.y_border = self.y_spacing
-            if device_type == devices.INKY_PACK:
+            if self.device["type"] == devices.INKY_PACK:
                 self.x_border = 0
                 self.y_border = 0
 
@@ -139,6 +138,7 @@ class App:
                     self.pen_bg = EINK_COLOUR_WHITE
 
 
+        self.config = Config(filename="config.json")
         set_device()
         self.hello = Hello(
             board_id=ubinascii.hexlify(machine.unique_id()).decode(),
