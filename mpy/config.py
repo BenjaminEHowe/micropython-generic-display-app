@@ -5,6 +5,11 @@ class Config:
     DEFAULT_CONFIG = {
         "EINK_REFRESH_INTERVAL": 60,
         "EINK_UPDATE_SPEED": 2,
+        "WIFI_DEBUG_SHOW_HOSTNAME": False,
+        "WIFI_DEBUG_SHOW_IP": False,
+        "WIFI_DEBUG_SHOW_MAC": False,
+        "WIFI_DEBUG_SHOW_SSID": True,
+        "WIFI_DEBUG_SUCCESS_SECS": 3,
     }
 
 

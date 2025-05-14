@@ -1,7 +1,7 @@
 import machine
+import network
 import os
 import time
-import ubinascii
 
 import devices
 
@@ -11,26 +11,71 @@ from hello import Hello
 
 class App:
     def __init__(self):
-        def draw_display():
-            def display_clear():
-                self.display.set_pen(self.pen_bg)
-                self.display.clear()
-                self.display.set_pen(self.pen_fg)
+        def connect_to_wifi():
+            hostname = f"mpy-{self.board_id[:16]}"
+            current_y = self.y_border
+            display_clear()
+            if self.config.get("WIFI_DEBUG_SHOW_HOSTNAME"):
+                self.display.text("Hostname:", self.x_border, current_y, scale=self.device["font_scale"]["small"])
+                current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["small"]) + self.y_spacing
+                self.display.text(hostname, self.x_border + self.x_spacing * 2, current_y, scale=self.device["font_scale"]["regular"])
+                current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + (self.y_spacing * 3)
+            network.hostname(hostname)
+            wlan = network.WLAN(network.STA_IF)
+            if self.config.get("WIFI_DEBUG_SHOW_MAC"):
+                self.display.text("MAC address:", self.x_border, current_y, scale=self.device["font_scale"]["small"])
+                current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["small"]) + self.y_spacing
+                mac_address = ':'.join([f"{b:02X}" for b in wlan.config("mac")])
+                self.display.text(mac_address, self.x_border + self.x_spacing * 2, current_y, scale=self.device["font_scale"]["regular"])
+                current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + (self.y_spacing * 3)
+            display_update()
+            wlan.active(True)
+            if self.config.get("WIFI_DEBUG_SHOW_SSID"):
+                connecting_text = "Connecting to " + self.config.get("WIFI_NETWORK")
+            else:
+                connecting_text = "Connecting to WiFi..."
+            self.display.text(connecting_text, self.x_border, current_y, scale=self.device["font_scale"]["small"])
+            display_update()
+            current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["small"]) + self.y_spacing
+            wlan.connect(self.config.get("WIFI_NETWORK"), self.config.get("WIFI_PASSWORD"))
+            while wlan.isconnected() == False:
+                pass
+            if self.config.get("WIFI_DEBUG_SHOW_IP"):
+                connected_text = "Connected, my IPv4 address is:"
+            else:
+                connected_text = "Connected!"
+            self.display.text(connected_text, self.x_border, current_y, scale=self.device["font_scale"]["small"])
+            current_y += (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["small"]) + self.y_spacing
+            if self.config.get("WIFI_DEBUG_SHOW_IP"):
+                ipv4_address = wlan.ifconfig()[0]
+                self.display.text(ipv4_address, self.x_border + self.x_spacing * 2, current_y, scale=self.device["font_scale"]["regular"])
+            if self.device["type"] == "inky_pack":
+                time.sleep(5) # TODO: https://github.com/BenjaminEHowe/micropython-generic-display-app/issues/6
+            display_update()
+            if self.config.get("WIFI_DEBUG_SUCCESS_SECS"):
+                time.sleep(self.config.get("WIFI_DEBUG_SUCCESS_SECS"))
 
 
-            def display_update():
-                if self.eink_variable_update_speed:
-                    if self.eink_update_count % self.config.get("EINK_REFRESH_INTERVAL") == 0:
-                        self.display.set_update_speed(EINK_UPDATE_SPEED_SLOW)
-                    else:
-                        self.display.set_update_speed(self.config.get("EINK_UPDATE_SPEED"))
-                    self.eink_update_count += 1
-                if self.device["type"] == devices.PRESTO:
-                    self.presto.update()
+        def display_clear():
+            self.display.set_pen(self.pen_bg)
+            self.display.clear()
+            self.display.set_pen(self.pen_fg)
+
+
+        def display_update():
+            if self.eink_variable_update_speed:
+                if self.eink_update_count % self.config.get("EINK_REFRESH_INTERVAL") == 0:
+                    self.display.set_update_speed(EINK_UPDATE_SPEED_SLOW)
                 else:
-                    self.display.update()
+                    self.display.set_update_speed(self.config.get("EINK_UPDATE_SPEED"))
+                self.eink_update_count += 1
+            if self.device["type"] == devices.PRESTO:
+                self.presto.update()
+            else:
+                self.display.update()
 
 
+        def draw_display():
             display_clear()
             
             hello_y_pos = self.y_border
@@ -39,7 +84,7 @@ class App:
             board_id_title_y_pos = hello_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
             self.display.text("Board ID:", self.x_border, board_id_title_y_pos, scale=self.device["font_scale"]["regular"])
             board_id_y_pos = board_id_title_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["regular"]) + self.y_spacing
-            self.display.text(self.hello.board_id, self.x_spacing * 3, board_id_y_pos, scale=self.device["font_scale"]["large"])
+            self.display.text(self.hello.board_id, self.x_border + self.x_spacing * 2, board_id_y_pos, scale=self.device["font_scale"]["large"])
 
             system_uptime_title_y_pos = board_id_y_pos + (FONT_HEIGHT_BITMAP8 * self.device["font_scale"]["large"]) + self.y_spacing
             self.display.text("System uptime:", self.x_spacing, system_uptime_title_y_pos, scale=self.device["font_scale"]["regular"])
@@ -138,19 +183,23 @@ class App:
                     self.pen_bg = EINK_COLOUR_WHITE
 
 
+        boot_time = time.time()
         self.config = Config(filename="config.json")
         set_device()
-        self.hello = Hello(
-            board_id=ubinascii.hexlify(machine.unique_id()).decode(),
-            boot_time=time.time(),
-            micropython_version=os.uname().release,
-            name=self.device["name"],
-        )
+        self.board_id = machine.unique_id().hex()
         set_display()
         self.display.set_font("bitmap8")
         set_eink_refresh_interval()
         set_pens()
         set_dimensions()
+        if self.config.get("WIFI_NETWORK"):
+            connect_to_wifi()
+        self.hello = Hello(
+            board_id=self.board_id,
+            boot_time=boot_time,
+            micropython_version=os.uname().release,
+            name=self.device["name"],
+        )
         self.display_last_draw_tms = None
         while True:
             draw_display_maybe()
