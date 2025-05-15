@@ -134,6 +134,7 @@ class App:
                     should_update_time = True
             if should_update_time:
                 ntptime.settime()
+                self.ntp_last_update_tms = now_ticks_ms
 
 
         def set_device():
