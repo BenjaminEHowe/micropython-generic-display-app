@@ -5,6 +5,8 @@ class Config:
     DEFAULT_CONFIG = {
         "EINK_REFRESH_INTERVAL": 60,
         "EINK_UPDATE_SPEED": 2,
+        "NTP_INTERVAL_HOURS": 4,
+        "NTP_HOST": "time.cloudflare.com",
         "WIFI_DEBUG_SHOW_HOSTNAME": False,
         "WIFI_DEBUG_SHOW_IP": False,
         "WIFI_DEBUG_SHOW_MAC": False,

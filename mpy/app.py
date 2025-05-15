@@ -1,5 +1,6 @@
 import machine
 import network
+import ntptime
 import os
 import time
 
@@ -120,6 +121,21 @@ class App:
                 self.display_last_draw_tms = now_ticks_ms
 
 
+        def ntp_update_time_maybe():
+            if self.config.get("WIFI_NETWORK") == None:
+                return
+            should_update_time = False
+            now_ticks_ms = time.ticks_ms()
+            if self.ntp_last_update_tms == None:
+                should_update_time = True
+            else:
+                time_elapsed = time.ticks_diff(now_ticks_ms, self.ntp_last_update_tms)
+                if time_elapsed > (self.config.get("NTP_INTERVAL_HOURS") * 60 * 60 * 1000):
+                    should_update_time = True
+            if should_update_time:
+                ntptime.settime()
+
+
         def set_device():
             device_type = self.config.get("DEVICE_TYPE")
             if device_type not in devices.KNOWN_DEVICES:
@@ -183,7 +199,6 @@ class App:
                     self.pen_bg = EINK_COLOUR_WHITE
 
 
-        boot_time = time.time()
         self.config = Config(filename="config.json")
         set_device()
         self.board_id = machine.unique_id().hex()
@@ -194,6 +209,10 @@ class App:
         set_dimensions()
         if self.config.get("WIFI_NETWORK"):
             connect_to_wifi()
+            ntptime.host = self.config.get("NTP_HOST")
+            self.ntp_last_update_tms = None
+            ntp_update_time_maybe()
+        boot_time = time.time()
         self.hello = Hello(
             board_id=self.board_id,
             boot_time=boot_time,
@@ -202,6 +221,7 @@ class App:
         )
         self.display_last_draw_tms = None
         while True:
+            ntp_update_time_maybe()
             draw_display_maybe()
 
 
