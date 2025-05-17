@@ -1,8 +1,19 @@
+BADGER_2040 = "badger_2040"
 INKY_FRAME_4 = "inky_frame_4"
 INKY_PACK = "inky_pack"
 PRESTO = "presto"
 
 KNOWN_DEVICES = {
+    BADGER_2040: {
+        "colour": False,
+        "display_tech": "eink",
+        "font_scale": {
+            "small": 1,
+            "regular": 2,
+            "large": 3,
+        },
+        "name": "Badger 2040",
+    },
     INKY_FRAME_4: {
         "colour": True,
         "display_tech": "eink",

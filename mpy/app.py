@@ -169,7 +169,7 @@ class App:
             if self.device["type"] == devices.INKY_FRAME_4:
                 from picographics import PicoGraphics, DISPLAY_INKY_FRAME_4
                 self.display = PicoGraphics(DISPLAY_INKY_FRAME_4)
-            elif self.device["type"] == devices.INKY_PACK:
+            elif self.device["type"] in (devices.BADGER_2040, devices.INKY_PACK):
                 from picographics import PicoGraphics, DISPLAY_INKY_PACK
                 self.display = PicoGraphics(DISPLAY_INKY_PACK)
             elif self.device["type"] == devices.PRESTO:

@@ -28,6 +28,7 @@ The following configuration items can be set in `config.json`, and are optional 
 
 ## Supported Devices
 For full details on supported devices see [`mpy/devices.py`](/mpy/devices.py).
+- [Pimoroni Badger 2040 W](https://shop.pimoroni.com/products/badger-2040-w): `badger_2040`
 - [Pimoroni Inky Frame 4](https://shop.pimoroni.com/products/inky-frame-4): `inky_frame_4`
 - [Pimoroni Inky Pack](https://shop.pimoroni.com/products/pico-inky-pack): `inky_pack`
 - [Pimoroni Presto](https://shop.pimoroni.com/products/presto): `presto`
