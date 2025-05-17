@@ -51,7 +51,8 @@ class App:
                 ipv4_address = wlan.ifconfig()[0]
                 self.display.text(ipv4_address, self.x_border + self.x_spacing * 2, current_y, scale=self.device["font_scale"]["regular"])
             if self.device["type"] == "inky_pack":
-                time.sleep(5) # TODO: https://github.com/BenjaminEHowe/micropython-generic-display-app/issues/6
+                # see https://github.com/BenjaminEHowe/micropython-generic-display-app/issues/6
+                time.sleep(5)
             display_update()
             if self.config.get("WIFI_DEBUG_SUCCESS_SECS"):
                 time.sleep(self.config.get("WIFI_DEBUG_SUCCESS_SECS"))
