@@ -1,3 +1,4 @@
+import gc
 import machine
 import network
 import ntptime
@@ -75,6 +76,7 @@ class App:
                 self.presto.update()
             else:
                 self.display.update()
+            gc.collect()
 
 
         def draw_display():
