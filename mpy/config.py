@@ -14,10 +14,25 @@ class Config:
         "WIFI_DEBUG_SUCCESS_SECS": 3,
     }
 
+    SENSITIVE_CONFIG = [
+        "WIFI_PASSWORD",
+    ]
+
 
     def __init__(self, filename):
         self.filename = filename
         self.load()
+
+
+    def export(self):
+        redacted_data = self.data
+        for key in self.SENSITIVE_CONFIG:
+            if key in redacted_data:
+                redacted_data[key] = "***"
+        return {
+            "default": self.DEFAULT_CONFIG,
+            "user": redacted_data,
+        }
 
 
     def get(self, key):

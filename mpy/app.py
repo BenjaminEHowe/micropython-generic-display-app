@@ -1,4 +1,6 @@
+import asyncio
 import gc
+import json
 import machine
 import network
 import ntptime
@@ -9,6 +11,12 @@ import devices
 
 from config import Config
 from hello import Hello
+
+
+async def garbage_collect():
+    while True:
+        await asyncio.sleep(60)
+        gc.collect()
 
 
 class App:
@@ -76,7 +84,6 @@ class App:
                 self.presto.update()
             else:
                 self.display.update()
-            gc.collect()
 
 
         def draw_display():
@@ -110,34 +117,46 @@ class App:
             display_update()
 
 
-        def draw_display_maybe():
-            should_draw_display = False
-            now_ticks_ms = time.ticks_ms()
-            if self.display_last_draw_tms == None:
-                should_draw_display = True
-            else:
-                time_elapsed = time.ticks_diff(now_ticks_ms, self.display_last_draw_tms)
-                if time_elapsed > self.display_refresh_ms:
-                    should_draw_display = True
-            if should_draw_display:
+        async def draw_display_async():
+            while True:
+                start_frame_ticks_ms = time.ticks_ms()
                 draw_display()
-                self.display_last_draw_tms = now_ticks_ms
+                end_frame_ticks_ms = time.ticks_ms()
+                draw_time_ms = time.ticks_ms() - start_frame_ticks_ms
+                ideal_sleep_time = self.display_refresh_ms - draw_time_ms
+                sleep_time = max(5, ideal_sleep_time)
+                await asyncio.sleep_ms(sleep_time)
 
 
-        def ntp_update_time_maybe():
+        async def handle_web_request(reader, writer):
+            request_parts = str(await reader.readline(), "utf-8").split()
+            # consume HTTP request headers
+            while await reader.readline() != b"\r\n":
+                pass
+            verb = request_parts[0]
+            path = request_parts[1]
+            print(f"Request received! {verb} {path}")
+            writer.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n")
+            writer.write(json.dumps({
+                "board_id": self.hello.board_id,
+                "board_type": self.device["type"],
+                "boot_time": self.hello.boot_time,
+                "config": self.config.export(),
+                "current_time": time.time(),
+                "micropython_version": os.uname().release,
+                "uptime": self.hello.uptime_string_calculate(),
+            }))
+            await writer.drain()
+            await writer.wait_closed()
+            gc.collect()
+
+
+        async def ntp_update_time():
             if self.config.get("WIFI_NETWORK") == None:
                 return
-            should_update_time = False
-            now_ticks_ms = time.ticks_ms()
-            if self.ntp_last_update_tms == None:
-                should_update_time = True
-            else:
-                time_elapsed = time.ticks_diff(now_ticks_ms, self.ntp_last_update_tms)
-                if time_elapsed > (self.config.get("NTP_INTERVAL_HOURS") * 60 * 60 * 1000):
-                    should_update_time = True
-            if should_update_time:
+            while True:
+                await asyncio.sleep(self.config.get("NTP_INTERVAL_HOURS") * 60 * 60)
                 ntptime.settime()
-                self.ntp_last_update_tms = now_ticks_ms
 
 
         def set_device():
@@ -214,8 +233,7 @@ class App:
         if self.config.get("WIFI_NETWORK"):
             connect_to_wifi()
             ntptime.host = self.config.get("NTP_HOST")
-            self.ntp_last_update_tms = None
-            ntp_update_time_maybe()
+            ntptime.settime()
         boot_time = time.time()
         self.hello = Hello(
             board_id=self.board_id,
@@ -223,10 +241,13 @@ class App:
             micropython_version=os.uname().release,
             name=self.device["name"],
         )
-        self.display_last_draw_tms = None
+        loop = asyncio.get_event_loop()
+        loop.create_task(asyncio.start_server(handle_web_request, "0.0.0.0", 80))
+        loop.create_task(ntp_update_time())
+        loop.create_task(draw_display_async())
+        loop.create_task(garbage_collect())
         while True:
-            ntp_update_time_maybe()
-            draw_display_maybe()
+            loop.run_forever()
 
 
 EINK_BW_BLACK = 0
