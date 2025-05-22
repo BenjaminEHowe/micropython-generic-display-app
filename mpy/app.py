@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import json
+import logging
 import machine
 import network
 import ntptime
@@ -11,6 +12,7 @@ import devices
 
 from config import Config
 from hello import Hello
+from log_handler import LogHandler
 
 
 async def garbage_collect():
@@ -135,7 +137,8 @@ class App:
                 pass
             verb = request_parts[0]
             path = request_parts[1]
-            print(f"Request received! {verb} {path}")
+            peer = reader.get_extra_info("peername")[0]
+            self.logger.info(f"Recieved {verb} {path} from {peer}")
             writer.write("HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n")
             writer.write(json.dumps({
                 "board_id": self.hello.board_id,
@@ -143,6 +146,7 @@ class App:
                 "boot_time": self.hello.boot_time,
                 "config": self.config.export(),
                 "current_time": time.time(),
+                "logs": self.log_handler.history,
                 "micropython_version": os.uname().release,
                 "uptime": self.hello.uptime_string_calculate(),
             }))
@@ -209,6 +213,13 @@ class App:
                 self.eink_variable_update_speed = False
 
 
+        def set_logging():
+            logging.basicConfig(level=logging.DEBUG)
+            self.logger = logging.getLogger(__name__)
+            self.log_handler = LogHandler(history_limit=self.config.get("LOG_LIMIT"))
+            self.logger.addHandler(self.log_handler)
+
+
         def set_pens():
             if not self.device["colour"]:
                 self.pen_fg = EINK_BW_BLACK
@@ -223,6 +234,7 @@ class App:
 
 
         self.config = Config(filename="config.json")
+        set_logging()
         set_device()
         self.board_id = machine.unique_id().hex()
         set_display()
@@ -238,6 +250,7 @@ class App:
         self.hello = Hello(
             board_id=self.board_id,
             boot_time=boot_time,
+            logger=self.logger,
             micropython_version=os.uname().release,
             name=self.device["name"],
         )

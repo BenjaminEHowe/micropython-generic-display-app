@@ -1,3 +1,4 @@
+import logging
 import time
 
 
@@ -6,6 +7,7 @@ class Hello:
         self,
         board_id,
         boot_time,
+        logger,
         micropython_version,
         name,
     ):
@@ -13,6 +15,7 @@ class Hello:
         self.boot_time = boot_time
         self.micropython_version = micropython_version
         self.name = name
+        logger.info("Hello started successfully")
 
 
     def uptime_string_calculate(
