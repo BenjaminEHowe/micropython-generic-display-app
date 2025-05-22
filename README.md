@@ -16,6 +16,7 @@ The following configuration items can be set in `config.json`, and are optional 
 - `DEVICE_TYPE` (mandatory): the type of device that this code is running on, see below for more details.
 - `EINK_REFRESH_INTERVAL`: the frequency with which to do a "full" (as opposed to a "fast") refresh on eInk displays that support variable update speed. Defaults to `60`.
 - `EINK_UPDATE_SPEED`: the speed for regular ("fast") refreshes on eInk displays that support variable update speed. Defaults to `2`. See [Pimoroni's GitHub](https://github.com/pimoroni/badger2040/blob/f2b3dbc61e8c92376217c06045ec11a8aff1df8c/docs/reference.md#update-speed) for more details.
+- `LOG_LIMIT`: the number of log entries to store.
 - `NTP_HOST`: the host of the NTP server to use to sync the internal clock. Defaults to `time.cloudflare.com` ([Cloudflare Time Services](https://www.cloudflare.com/time/)).
 - `NTP_INTERVAL_HOURS`: the frequency (in hours) to sync the internal clock with the NTP server. Defaults to `4`.
 - `WIFI_DEBUG_SHOW_HOSTNAME`: show the device hostname when connecting to WiFi. Defaults to `false`.
