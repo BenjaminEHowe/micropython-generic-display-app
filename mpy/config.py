@@ -1,4 +1,4 @@
-import ujson
+import json
 
 
 class Config:
@@ -47,4 +47,4 @@ class Config:
 
     def load(self):
         with open(self.filename) as f:
-            self.data = ujson.load(f)
+            self.data = json.load(f)
