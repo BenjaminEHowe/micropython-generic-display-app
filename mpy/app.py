@@ -135,6 +135,7 @@ class App:
                 draw_time_ms = time.ticks_ms() - start_frame_ticks_ms
                 ideal_sleep_time = self.display_refresh_ms - draw_time_ms
                 sleep_time = max(5, ideal_sleep_time)
+                self.logger.debug(f"Display draw took {draw_time_ms}ms, sleeping for {sleep_time}ms")
                 await asyncio.sleep_ms(sleep_time)
 
 
@@ -222,7 +223,10 @@ class App:
 
 
         def set_logging():
-            logging.basicConfig(level=logging.DEBUG)
+            if self.config.get("LOG_DEBUG"):
+                logging.basicConfig(level=logging.DEBUG)
+            else:
+                logging.basicConfig(level=logging.INFO)
             self.logger = logging.getLogger(__name__)
             self.log_handler = LogHandler(history_limit=self.config.get("LOG_LIMIT"))
             self.logger.addHandler(self.log_handler)

@@ -5,6 +5,7 @@ class Config:
     DEFAULT_CONFIG = {
         "EINK_REFRESH_INTERVAL": 60,
         "EINK_UPDATE_SPEED": 2,
+        "LOG_DEBUG": False,
         "LOG_LIMIT": 100,
         "NTP_HOST": "time.cloudflare.com",
         "NTP_INTERVAL_HOURS": 4,
