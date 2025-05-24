@@ -15,13 +15,21 @@ from hello import Hello
 from log_handler import LogHandler
 
 
-async def garbage_collect():
-    while True:
-        await asyncio.sleep(60)
-        gc.collect()
-
-
 class App:
+    async def garbage_collect_async(self):
+        while True:
+            await asyncio.sleep(60)
+            gc()
+
+
+    def gc(self):
+        initial_bytes_used = gc.mem_alloc()
+        gc.collect()
+        bytes_used = gc.mem_alloc()
+        bytes_available = gc.mem_free()
+        self.logger.debug(f"Successfully ran gc, freed {initial_bytes_used-bytes_used} B, {bytes_used} B used, {bytes_available} B available")
+
+
     def __init__(self):
         def connect_to_wifi():
             hostname = f"mpy-{self.board_id[:16]}"
@@ -152,7 +160,7 @@ class App:
             }))
             await writer.drain()
             await writer.wait_closed()
-            gc.collect()
+            self.gc()
 
 
         async def ntp_update_time():
@@ -250,7 +258,10 @@ class App:
         self.hello = Hello(
             board_id=self.board_id,
             boot_time=boot_time,
-            logger=self.logger,
+            helpers={
+                "gc": self.gc,
+                "logger": self.logger,
+            },
             micropython_version=os.uname().release,
             name=self.device["name"],
         )
@@ -258,7 +269,7 @@ class App:
         loop.create_task(asyncio.start_server(handle_web_request, "0.0.0.0", 80))
         loop.create_task(ntp_update_time())
         loop.create_task(draw_display_async())
-        loop.create_task(garbage_collect())
+        loop.create_task(self.garbage_collect_async())
         while True:
             loop.run_forever()
 

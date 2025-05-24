@@ -1,3 +1,4 @@
+import gc
 import logging
 import time
 
@@ -7,7 +8,7 @@ class Hello:
         self,
         board_id,
         boot_time,
-        logger,
+        helpers,
         micropython_version,
         name,
     ):
@@ -15,7 +16,8 @@ class Hello:
         self.boot_time = boot_time
         self.micropython_version = micropython_version
         self.name = name
-        logger.info("Hello started successfully")
+        helpers["logger"].info("Hello started successfully")
+        helpers["gc"]() # pretend that we're preparing for an operation that requires lots of memory
 
 
     def uptime_string_calculate(
