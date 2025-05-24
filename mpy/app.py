@@ -183,7 +183,7 @@ class App:
             if self.device["display_tech"] == "eink":
                 if self.device["colour"]:
                     # colour devices take approximately 40 seconds to refresh
-                    self.display_refresh_ms = 300 * 1000
+                    self.display_refresh_ms = 5 * 60 * 1000
                 else:
                     # b&w devices are generally pretty quick to refresh
                     self.display_refresh_ms = 60 * 1000
